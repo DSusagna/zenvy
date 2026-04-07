@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Zenvy — Beauty Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink:#12100E; --ink2:#4A3F38; --ink3:#8C7D74;
+            --cream:#F9F5F0; --warm:#F0E8DF; --gold:#C9A96E; --gold2:#E8D5B0;
+            --blush:#D4957A; --sage:#7A9E8E; --wine:#8B3A52;
+            --border:rgba(18,16,14,0.10); --r:18px; --rs:12px;
+            --trans:all 0.35s cubic-bezier(.4,0,.2,1);
+            --green:#27ae60; --red:#e74c3c; --orange:#f39c12;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;width:100%;background:#1A1410;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;overflow:hidden}
+
+        /* PHONE SHELL */
+        .shell{width:393px;height:852px;border-radius:54px;background:var(--cream);box-shadow:0 0 0 11px #0D0B09,0 0 0 12px #2A2420,0 60px 120px rgba(0,0,0,0.7);display:flex;flex-direction:column;overflow:hidden;position:relative}
+        .statusbar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px 0;font-size:11px;font-weight:500;color:var(--ink2);position:absolute;top:0;left:0;right:0;z-index:200;pointer-events:none}
+        .screen{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}
+        .screen::-webkit-scrollbar{display:none}
+
+        /* BOTTOM NAV */
+        .bnav{display:flex;background:rgba(249,245,240,0.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 12px;border-radius:0 0 40px 40px;flex-shrink:0;z-index:50;position:relative}
+        .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:4px 0}
+        .bnav-icon{font-size:20px;line-height:1}
+        .bnav-label{font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);transition:color 0.2s}
+        .bnav-btn.active .bnav-label{color:var(--gold)}
+        .bnav-btn.active .bnav-icon{filter:drop-shadow(0 0 4px rgba(201,169,110,0.6))}
+        /* center + button */
+        .bnav-plus{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--blush));border:none;cursor:pointer;font-size:26px;color:#fff;display:flex;align-items:center;justify-content:center;margin-top:-18px;box-shadow:0 4px 16px rgba(201,169,110,0.5);transition:var(--trans)}
+        .bnav-plus:hover{transform:scale(1.1)}
+
+        /* PAGE TRANSITIONS */
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .z-screen{display:none}
+        .z-screen.active{display:block;animation:fadeUp .35s ease}
+
+        /* TOAST */
+        .toast{position:absolute;bottom:90px;left:20px;right:20px;background:var(--ink);color:var(--cream);padding:12px 16px;border-radius:10px;font-size:13px;text-align:center;z-index:999;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
+        .toast.show{transform:translateY(0);opacity:1}
+
+        /* ── SPLASH ── */
+        .splash{height:852px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+        .splash-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,14,0)0%,rgba(18,16,14,0.55)50%,rgba(18,16,14,0.92)100%),url('https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80') center/cover no-repeat}
+        .splash-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 32px 44px}
+        .splash-logo{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;letter-spacing:8px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:auto}
+        .splash-hl{font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:300;line-height:1.05;color:#fff;margin-bottom:10px}
+        .splash-hl em{font-style:italic;color:var(--gold2)}
+        .splash-sub{font-size:13px;font-weight:300;color:rgba(255,255,255,0.6);line-height:1.8;margin-bottom:32px;max-width:260px}
+        .btn-gold{width:100%;padding:16px;background:var(--gold);color:#12100E;border:none;border-radius:var(--rs);font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:var(--trans);margin-bottom:10px}
+        .btn-gold:hover{background:#B8935A;transform:translateY(-1px)}
+        .btn-outline-light{width:100%;padding:14px;background:transparent;color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.3);border-radius:var(--rs);font-family:'Jost',sans-serif;font-size:12px;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:var(--trans)}
+        .btn-outline-light:hover{border-color:rgba(255,255,255,0.6);color:#fff}
+
+        /* ── AUTH ── */
+        .auth-screen{min-height:852px;display:flex;flex-direction:column;background:var(--cream);padding-top:56px}
+        .auth-hero{height:220px;position:relative;flex-shrink:0;overflow:hidden}
+        .auth-hero img{width:100%;height:100%;object-fit:cover}
+        .auth-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,14,0.35)0%,rgba(18,16,14,0)40%,rgba(249,245,240,1)100%)}
+        .auth-logo-over{position:absolute;top:36px;left:0;right:0;text-align:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:#fff}
+        .auth-form-area{padding:0 28px 40px;flex:1}
+        .auth-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--ink);margin-bottom:4px}
+        .auth-sub{font-size:12px;color:var(--ink3);margin-bottom:24px;letter-spacing:.5px}
+        .field-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;margin-top:16px;display:block}
+        .field-input{width:100%;padding:13px 16px;background:#fff;border:1px solid var(--border);border-radius:var(--rs);font-family:'Jost',sans-serif;font-size:14px;color:var(--ink);outline:none;transition:border .2s}
+        .field-input:focus{border-color:var(--gold)}
+        .auth-switch{text-align:center;margin-top:20px;font-size:12px;color:var(--ink3)}
+        .auth-switch span{color:var(--gold);cursor:pointer;font-weight:500}
+
+        /* ONBOARDING */
+        .onb-step{display:none}.onb-step.active{display:block}
+        .onb-progress{height:3px;background:var(--warm);border-radius:99px;margin-bottom:20px;overflow:hidden}
+        .onb-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--blush));border-radius:99px;transition:width .4s ease}
+        .onb-q{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--ink);margin-bottom:16px;line-height:1.3}
+        .onb-opts{display:flex;flex-direction:column;gap:10px}
+        .onb-opt{padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--ink2);transition:var(--trans);background:#fff;text-align:left}
+        .onb-opt.selected,.onb-opt:hover{border-color:var(--gold);background:rgba(201,169,110,0.08);color:var(--ink)}
+        .onb-nav{display:flex;gap:12px;margin-top:20px}
+        .btn-sm-gold{padding:12px 24px;background:var(--gold);color:#12100E;border:none;border-radius:var(--rs);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:var(--trans);flex:1}
+        .btn-sm-gold:hover{background:#B8935A}
+        .btn-sm-out{padding:12px 20px;background:transparent;border:1px solid var(--border);border-radius:var(--rs);font-size:12px;color:var(--ink3);cursor:pointer;transition:var(--trans)}
+
+        /* ── HOME ── */
+        .home-header{padding:90px 24px 0}
+        .home-greeting{font-size:12px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+        .home-name{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--ink)}
+        .home-name span{color:var(--gold);font-style:italic}
+        /* XP strip */
+        .xp-strip{margin:16px 24px;background:#fff;border-radius:var(--rs);padding:12px 16px;border:1px solid var(--border);display:flex;align-items:center;gap:12px}
+        .xp-info{flex:1}
+        .xp-level{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+        .xp-bar-wrap{height:6px;background:var(--warm);border-radius:99px;overflow:hidden}
+        .xp-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--blush));border-radius:99px;transition:width 1s ease}
+        .xp-pts{font-size:11px;color:var(--ink3);margin-top:3px}
+        .streak-badge{background:linear-gradient(135deg,#f39c12,#e74c3c);color:#fff;border-radius:8px;padding:6px 10px;text-align:center;font-size:10px;font-weight:700;white-space:nowrap}
+
+        /* SECTION TITLE */
+        .sect-title{padding:20px 24px 10px;display:flex;justify-content:space-between;align-items:center}
+        .sect-title h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--ink)}
+        .sect-title a{font-size:11px;color:var(--gold);cursor:pointer;letter-spacing:.5px}
+
+        /* EVENT CARDS */
+        .events-scroll{display:flex;gap:14px;padding:0 24px 8px;overflow-x:auto;scrollbar-width:none}
+        .events-scroll::-webkit-scrollbar{display:none}
+        .event-card{min-width:200px;border-radius:16px;overflow:hidden;cursor:pointer;flex-shrink:0;position:relative;box-shadow:0 4px 20px rgba(0,0,0,0.12);transition:var(--trans)}
+        .event-card:hover{transform:translateY(-3px)}
+        .event-card-img{width:100%;height:130px;object-fit:cover}
+        .event-card-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(18,16,14,0.85)100%)}
+        .event-card-body{position:absolute;bottom:0;left:0;right:0;padding:12px}
+        .event-card-tag{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold2);margin-bottom:3px}
+        .event-card-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:#fff;line-height:1.1}
+        .event-card-date{font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px}
+
+        /* COMMUNITY STRIP */
+        .community-scroll{display:flex;gap:12px;padding:0 24px 16px;overflow-x:auto;scrollbar-width:none}
+        .community-scroll::-webkit-scrollbar{display:none}
+        .comm-card{min-width:160px;background:#fff;border-radius:14px;padding:14px;border:1px solid var(--border);flex-shrink:0;cursor:pointer}
+        .comm-avatar{font-size:28px;margin-bottom:6px}
+        .comm-user{font-size:11px;font-weight:600;color:var(--ink)}
+        .comm-look{font-size:10px;color:var(--gold);margin-bottom:4px}
+        .comm-caption{font-size:11px;color:var(--ink2);line-height:1.4}
+        .comm-votes{font-size:10px;color:var(--ink3);margin-top:6px}
+
+        /* ── EVENT DETAIL ── */
+        .event-detail-hero{height:260px;position:relative;flex-shrink:0}
+        .event-detail-hero img{width:100%;height:100%;object-fit:cover}
+        .event-detail-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,14,0.4)0%,rgba(249,245,240,1)100%)}
+        .back-btn{position:absolute;top:60px;left:20px;z-index:10;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:#fff}
+        .detail-content{padding:0 24px 100px}
+        .detail-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+        .detail-name{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--ink);line-height:1.05;margin-bottom:2px}
+        .detail-date{font-size:13px;color:var(--ink3);margin-bottom:20px}
+        /* Weather block */
+        .weather-block{background:linear-gradient(135deg,#e8f4f8,#f0f8e8);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;border:1px solid rgba(122,158,142,0.2)}
+        .weather-emoji{font-size:36px}
+        .weather-info{flex:1}
+        .weather-temp{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--ink)}
+        .weather-label{font-size:11px;color:var(--sage);font-weight:500;margin-top:2px}
+        .weather-outfits{font-size:10px;color:var(--ink3);margin-top:4px}
+        /* Outfit suggestions */
+        .outfit-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+        .outfit-chip{padding:8px 14px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid;transition:var(--trans)}
+        .outfit-chip:hover{transform:scale(1.04)}
+        /* Action buttons */
+        .detail-actions{display:flex;gap:12px;margin-bottom:24px}
+        .btn-start{flex:1;padding:15px;background:linear-gradient(135deg,var(--gold),var(--blush));color:#12100E;border:none;border-radius:var(--rs);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:var(--trans)}
+        .btn-start:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(201,169,110,0.4)}
+        .btn-late{flex:1;padding:15px;background:var(--red);color:#fff;border:none;border-radius:var(--rs);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:var(--trans)}
+        .btn-late:hover{background:#c0392b;transform:translateY(-2px)}
+        /* Timeline */
+        .timeline-wrap{margin-bottom:24px}
+        .tl-item{display:flex;gap:14px;margin-bottom:0}
+        .tl-line-col{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0}
+        .tl-dot{width:32px;height:32px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid var(--gold2);flex-shrink:0;transition:var(--trans)}
+        .tl-dot.done{background:var(--gold);border-color:var(--gold)}
+        .tl-connector{width:2px;flex:1;background:var(--border);min-height:16px}
+        .tl-body{flex:1;padding-bottom:20px}
+        .tl-time{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--gold);margin-bottom:2px}
+        .tl-label{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:2px}
+        .tl-dur{font-size:11px;color:var(--ink3)}
+        .tl-item.essential-only .tl-dot{border-color:var(--red)}
+        /* Reminders */
+        .reminder-item{display:flex;align-items:flex-start;gap:12px;padding:12px;background:#fff;border-radius:var(--rs);border:1px solid var(--border);margin-bottom:8px}
+        .reminder-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .reminder-info{flex:1}
+        .reminder-time{font-size:11px;font-weight:600;color:var(--ink);margin-bottom:2px}
+        .reminder-msg{font-size:12px;color:var(--ink3)}
+        /* Tutorials in detail */
+        .tut-suggestion{display:flex;gap:12px;align-items:center;padding:12px;background:#fff;border-radius:var(--rs);border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
+        .tut-suggestion:hover{border-color:var(--gold);background:rgba(201,169,110,0.05)}
+        .tut-icon{font-size:26px}
+        .tut-info{flex:1}
+        .tut-name{font-size:13px;font-weight:500;color:var(--ink)}
+        .tut-meta{font-size:11px;color:var(--ink3)}
+
+        /* ── ADD EVENT MODAL ── */
+        .modal-overlay{position:absolute;inset:0;background:rgba(18,16,14,0.6);backdrop-filter:blur(4px);z-index:900;display:flex;flex-direction:column;justify-content:flex-end}
+        .modal-sheet{background:var(--cream);border-radius:28px 28px 0 0;max-height:88%;overflow-y:auto;padding:0 0 40px;animation:slideUp .35s ease}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal-handle{width:36px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 0}
+        .modal-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--ink);padding:16px 24px 0}
+        .modal-body{padding:8px 24px 0}
+        .modal-footer{padding:16px 24px 0;display:flex;gap:12px}
+
+        /* ── TUTORIALS ── */
+        .tut-header{padding:110px 24px 0}
+        .tut-search-wrap{margin:14px 24px;position:relative}
+        .tut-search{width:100%;padding:12px 16px 12px 40px;background:#fff;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;color:var(--ink);outline:none;font-family:'Jost',sans-serif;transition:border .2s}
+        .tut-search:focus{border-color:var(--gold)}
+        .tut-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--ink3)}
+        .tut-tabs{display:flex;gap:8px;padding:0 24px 0;overflow-x:auto;scrollbar-width:none;margin-bottom:16px}
+        .tut-tabs::-webkit-scrollbar{display:none}
+        .tut-tab{padding:8px 16px;border-radius:99px;font-size:11px;font-weight:500;letter-spacing:.5px;border:1.5px solid var(--border);color:var(--ink3);cursor:pointer;white-space:nowrap;background:#fff;transition:var(--trans)}
+        .tut-tab.active{background:var(--gold);border-color:var(--gold);color:#12100E;font-weight:600}
+        .tut-card{display:flex;gap:14px;align-items:flex-start;padding:14px;background:#fff;border-radius:14px;border:1px solid var(--border);margin:0 24px 10px;cursor:pointer;transition:var(--trans)}
+        .tut-card:hover{border-color:var(--gold);transform:translateX(3px)}
+        .tut-thumb{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0}
+        .tut-card-info{flex:1}
+        .tut-card-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px}
+        .tut-card-meta{font-size:11px;color:var(--ink3);margin-bottom:6px}
+        .tut-card-actions{display:flex;gap:8px}
+        .pill{padding:5px 12px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.5px;border:1.5px solid;cursor:pointer;transition:var(--trans)}
+        .pill-fav{border-color:var(--blush);color:var(--blush)}
+        .pill-fav.active{background:var(--blush);color:#fff}
+        .pill-assign{border-color:var(--sage);color:var(--sage)}
+        .pill-assign:hover{background:var(--sage);color:#fff}
+        /* Favorites section */
+        .favs-header{display:flex;gap:10px;padding:0 24px;margin-bottom:14px}
+        .favs-tab{padding:8px 16px;border-radius:99px;font-size:11px;font-weight:500;border:1.5px solid var(--border);color:var(--ink3);cursor:pointer;background:#fff;transition:var(--trans)}
+        .favs-tab.active{background:var(--ink);border-color:var(--ink);color:#fff}
+        .fav-card{display:flex;gap:14px;align-items:center;padding:12px 16px;background:#fff;border-radius:14px;border:1px solid var(--border);margin:0 24px 10px;cursor:pointer;transition:var(--trans)}
+        .fav-card:hover{border-color:var(--gold)}
+        .fav-thumb{font-size:32px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--warm);border-radius:12px;flex-shrink:0}
+        .fav-info{flex:1}
+        .fav-name{font-size:14px;font-weight:500;color:var(--ink)}
+        .fav-meta{font-size:11px;color:var(--ink3)}
+        .btn-remove-fav{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:18px;padding:4px}
+
+        /* ── CALENDAR ── */
+        .cal-header{padding:110px 24px 0}
+        .cal-nav{display:flex;align-items:center;justify-content:space-between;margin:16px 24px}
+        .cal-month{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--ink)}
+        .cal-nav-btn{background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:var(--trans)}
+        .cal-nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+        .cal-grid{padding:0 24px;margin-bottom:20px}
+        .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px}
+        .cal-day-hdr{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--ink3);padding:4px 0}
+        .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+        .cal-day{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:13px;cursor:pointer;transition:var(--trans);color:var(--ink2);position:relative}
+        .cal-day:hover{background:var(--warm)}
+        .cal-day.today{background:var(--gold);color:#12100E;font-weight:600}
+        .cal-day.has-event::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--blush)}
+        .cal-day.empty{opacity:0}
+        .cal-event-list{padding:0 24px 16px}
+        .cal-event-item{display:flex;gap:14px;align-items:center;padding:14px;background:#fff;border-radius:14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:var(--trans)}
+        .cal-event-item:hover{border-color:var(--gold);transform:translateX(3px)}
+        .cal-event-color{width:4px;border-radius:99px;align-self:stretch;background:var(--gold);flex-shrink:0}
+        .cal-event-info{flex:1}
+        .cal-event-name{font-size:14px;font-weight:500;color:var(--ink)}
+        .cal-event-date{font-size:11px;color:var(--ink3)}
+        .cal-sync-btn{margin:0 24px 16px;padding:14px;background:transparent;border:1.5px solid var(--border);border-radius:var(--rs);font-size:12px;font-weight:500;color:var(--ink2);cursor:pointer;width:calc(100% - 48px);display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--trans)}
+        .cal-sync-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+        /* ── CHATBOT ── */
+        .chat-header{padding:110px 24px 16px;background:linear-gradient(180deg,var(--cream) 80%,transparent);position:relative;z-index:2}
+        .chat-title-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+        .chat-avatar-lg{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--blush));display:flex;align-items:center;justify-content:center;font-size:22px}
+        .chat-bot-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--ink)}
+        .chat-bot-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px}
+        .chat-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+        .chat-suggestions{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:12px}
+        .chat-suggestions::-webkit-scrollbar{display:none}
+        .chat-sug{padding:8px 14px;background:#fff;border:1.5px solid var(--border);border-radius:99px;font-size:11px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:var(--trans)}
+        .chat-sug:hover{border-color:var(--gold);color:var(--gold)}
+        .chat-messages{flex:1;overflow-y:auto;padding:0 20px 16px;display:flex;flex-direction:column;gap:10px;min-height:300px;scrollbar-width:none}
+        .chat-messages::-webkit-scrollbar{display:none}
+        .chat-msg{max-width:75%;padding:12px 15px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word}
+        .chat-msg.bot{background:#fff;border:1px solid var(--border);color:var(--ink);align-self:flex-start;border-bottom-left-radius:4px}
+        .chat-msg.user{background:linear-gradient(135deg,var(--gold),var(--blush));color:#12100E;align-self:flex-end;border-bottom-right-radius:4px}
+        .chat-input-row{display:flex;gap:10px;padding:12px 20px;background:rgba(249,245,240,0.95);border-top:1px solid var(--border)}
+        .chat-input{flex:1;padding:12px 16px;background:#fff;border:1px solid var(--border);border-radius:24px;font-size:13px;font-family:'Jost',sans-serif;outline:none;color:var(--ink)}
+        .chat-input:focus{border-color:var(--gold)}
+        .chat-send{width:42px;height:42px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:var(--trans)}
+        .chat-send:hover{background:var(--blush)}
+
+        /* ── EVERYDAY PLAN / PRO ── */
+        .pro-screen{display:flex;flex-direction:column;min-height:852px;background:linear-gradient(180deg,#1A1410 0%,#2A1F1A 60%,#1A1410 100%);padding-top:56px;position:relative;overflow:hidden}
+        .pro-bg-pattern{position:absolute;inset:0;opacity:.04;background:repeating-linear-gradient(45deg,var(--gold) 0,var(--gold) 1px,transparent 0,transparent 50%);background-size:20px 20px}
+        .pro-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 32px}
+        .pro-logo{font-size:64px;margin-bottom:24px;filter:drop-shadow(0 0 20px rgba(201,169,110,0.6))}
+        .pro-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);border-radius:99px;padding:6px 16px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold2);margin-bottom:20px}
+        .pro-hl{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:#fff;text-align:center;line-height:1.1;margin-bottom:12px}
+        .pro-hl em{font-style:italic;color:var(--gold2)}
+        .pro-desc{font-size:13px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.8;margin-bottom:32px}
+        .pro-features{width:100%;margin-bottom:32px}
+        .pro-feat{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .pro-feat-icon{font-size:22px;width:40px;text-align:center}
+        .pro-feat-text{font-size:13px;color:rgba(255,255,255,0.7)}
+        .pro-feat-text strong{display:block;color:#fff;font-size:14px;margin-bottom:1px}
+        .btn-pro{width:100%;padding:18px;background:linear-gradient(135deg,var(--gold),var(--blush));color:#12100E;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:var(--trans);box-shadow:0 8px 30px rgba(201,169,110,0.4)}
+        .btn-pro:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,169,110,0.5)}
+        .pro-price{text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.4)}
+
+        /* ── PROFILE / SETTINGS ── */
+        .profile-header{height:200px;position:relative;background:linear-gradient(135deg,#1A1410 0%,#3A2820 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:20px;flex-shrink:0}
+        .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--blush));display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:10px;border:3px solid rgba(201,169,110,0.4)}
+        .profile-uname{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:#fff}
+        .profile-email{font-size:11px;color:rgba(255,255,255,0.5)}
+        .profile-badges{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;scrollbar-width:none;margin-bottom:4px}
+        .profile-badges::-webkit-scrollbar{display:none}
+        .bdg{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:var(--trans)}
+        .bdg.earned{border-color:var(--gold);background:rgba(201,169,110,0.06)}
+        .bdg.locked{opacity:.4;filter:grayscale(1)}
+        .bdg-icon{font-size:24px}
+        .bdg-name{font-size:9px;color:var(--ink3);text-align:center;line-height:1.2}
+        .settings-section{padding:0 24px;margin-bottom:8px}
+        .settings-section-title{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:16px 0 8px}
+        .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+        .settings-row:last-child{border-bottom:none}
+        .settings-label{font-size:14px;color:var(--ink);display:flex;align-items:center;gap:10px}
+        .settings-label span{font-size:18px}
+        /* Toggle */
+        .toggle{position:relative;width:44px;height:26px;cursor:pointer}
+        .toggle input{opacity:0;width:0;height:0;position:absolute}
+        .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:.3s;border:1px solid rgba(0,0,0,.1)}
+        .toggle-slider::before{content:'';position:absolute;height:20px;width:20px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+        .toggle input:checked + .toggle-slider{background:var(--gold)}
+        .toggle input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+        /* GAMIFICATION banner */
+        .game-banner{margin:0 24px 16px;background:linear-gradient(135deg,#1A1410,#3A2820);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px}
+        .game-banner-icon{font-size:36px}
+        .game-banner-info{flex:1}
+        .game-banner-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--gold2)}
+        .game-banner-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
+
+        /* Misc helpers */
+        .hidden{display:none!important}
+        .divider{height:1px;background:var(--border);margin:0 24px}
+        .pb-40{padding-bottom:40px}
+        .text-gold{color:var(--gold)}
+        .bold{font-weight:600}
+        select.field-input{-webkit-appearance:none;appearance:none}
+
+        .top-action-btn.right{
+            right:16px;
+        }
+
+        .top-action-icon{
+            font-size:16px;
+            line-height:1;
+        }
+
+        .top-action-label{
+            font-size:10px;
+            font-weight:600;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            color:var(--ink2);
+        }
+
+        .top-action-btn.active .top-action-label{
+            color:var(--gold);
+        }
+
+        /* TOP ACTIONS (arriba derecha/izquierda) */
+        .top-actions{
+            position:absolute;
+            top:60px;
+            left:0;
+            right:0;
+            z-index:300;
+            pointer-events:none;
+        }
+
+        .top-action-btn{
+            position:absolute;
+            display:flex;
+            align-items:center;
+            gap:6px;
+            background:rgba(249,245,240,0.95);
+            backdrop-filter:blur(12px);
+            border:1px solid var(--border);
+            border-radius:999px;
+            padding:8px 12px;
+            cursor:pointer;
+            pointer-events:auto;
+            box-shadow:0 4px 14px rgba(0,0,0,0.08);
+            transition:var(--trans);
+        }
+
+        .top-action-btn.left{
+            left:16px;
+        }
+
+        .top-action-btn.right{
+            right:16px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+    <!-- STATUS BAR -->
+    <div class="statusbar" id="statusbar" style="color:#fff">
+        <span id="statusTime">9:41</span>
+        <div style="display:flex;gap:6px;align-items:center;font-size:13px">
+            <span>📶</span><span>🔋</span>
+        </div>
+    </div>
+
+    <!-- SCREEN AREA -->
+    <div class="screen" id="mainScreen">
+
+        <!-- ══ SPLASH ══ -->
+        <div class="z-screen active" id="screenSplash">
+            <div class="splash">
+                <div class="splash-bg"></div>
+                <div class="splash-content">
+                    <div class="splash-logo">Zenvy</div>
+                    <div class="splash-hl">Look <em>amazing,</em><br>stress free.</div>
+                    <div class="splash-sub">Your AI-powered beauty planner for every event.</div>
+                    <button class="btn-gold" onclick="goScreen('screenLogin')">Get Started</button>
+                    <button class="btn-outline-light" onclick="doQuickLogin()">Sign In</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ LOGIN ══ -->
+        <div class="z-screen" id="screenLogin">
+            <div class="auth-screen">
+                <div class="auth-hero">
+                    <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80" alt="beauty">
+                    <div class="auth-hero-overlay"></div>
+                    <div class="auth-logo-over">Z E N V Y</div>
+                </div>
+                <div class="auth-form-area">
+                    <div class="auth-title">Welcome back</div>
+                    <div class="auth-sub">Sign in to your Zenvy account</div>
+                    <label class="field-label">Email address</label>
+                    <input class="field-input" type="email" placeholder="you@email.com" value="laura@zenvy.app">
+                    <label class="field-label">Password</label>
+                    <input class="field-input" type="password" placeholder="••••••••" value="12345678">
+                    <div style="margin-top:24px">
+                        <button class="btn-gold" onclick="doQuickLogin()">Sign In</button>
+                    </div>
+                    <div class="auth-switch">Don't have an account? <span onclick="goScreen('screenRegister')">Register</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ REGISTER ══ -->
+        <div class="z-screen" id="screenRegister">
+            <div class="auth-screen">
+                <div class="auth-hero">
+                    <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&q=80" alt="">
+                    <div class="auth-hero-overlay"></div>
+                    <div class="auth-logo-over">Z E N V Y</div>
+                </div>
+                <div class="auth-form-area">
+                    <div class="auth-title">Create account</div>
+                    <div class="auth-sub">Join thousands of Zenvy users</div>
+                    <label class="field-label">Full name</label>
+                    <input class="field-input" type="text" id="regName" placeholder="Your name">
+                    <label class="field-label">Email address</label>
+                    <input class="field-input" type="email" id="regEmail" placeholder="you@email.com">
+                    <label class="field-label">Password</label>
+                    <input class="field-input" type="password" id="regPass" placeholder="Min. 8 characters">
+                    <div style="margin-top:24px">
+                        <button class="btn-gold" onclick="startOnboarding()">Continue & Set Up Profile →</button>
+                    </div>
+                    <div class="auth-switch">Already have an account? <span onclick="goScreen('screenLogin')">Sign In</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ ONBOARDING ══ -->
+        <div class="z-screen" id="screenOnboarding">
+            <div style="padding:62px 28px 40px;min-height:852px;display:flex;flex-direction:column">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:4px;color:var(--gold);margin-bottom:16px;text-transform:uppercase">Your profile</div>
+                <div class="onb-progress"><div class="onb-bar" id="onbBar" style="width:10%"></div></div>
+                <div style="font-size:11px;color:var(--ink3);margin-bottom:24px" id="onbCounter">Question 1 of 10</div>
+                <div style="flex:1" id="onbContent"></div>
+                <div class="onb-nav">
+                    <button class="btn-sm-out" onclick="onbPrev()" id="onbPrevBtn">Back</button>
+                    <button class="btn-sm-gold" onclick="onbNext()" id="onbNextBtn">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ HOME ══ -->
+        <div class="z-screen" id="screenHome">
+            <div style="padding-bottom:16px">
+                <div class="home-header">
+                    <div class="home-greeting">Good morning ✨</div>
+                    <div class="home-name">Hello, <span id="homeUserName">Laura</span></div>
+                </div>
+                <!-- XP strip -->
+                <div class="xp-strip">
+                    <div class="xp-info">
+                        <div class="xp-level">Level 7 · Glamour Expert</div>
+                        <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar" style="width:62%"></div></div>
+                        <div class="xp-pts">1,360 / 1,500 XP to Level 8</div>
+                    </div>
+                    <div class="streak-badge">🔥 5<br><span style="font-size:9px;font-weight:500">day streak</span></div>
+                </div>
+                <!-- Events -->
+                <div class="sect-title">
+                    <h3>Upcoming Events</h3>
+                    <a onclick="showToast('All events coming soon!')">View all</a>
+                </div>
+                <div class="events-scroll" id="eventsScroll">
+                    <!-- Static events -->
+                    <div class="event-card" onclick="openEvent(0)">
+                        <img class="event-card-img" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=400&q=80" alt="">
+                        <div class="event-card-overlay"></div>
+                        <div class="event-card-body">
+                            <div class="event-card-tag">🥂 Wedding</div>
+                            <div class="event-card-name">Sofia & Marc's Wedding</div>
+                            <div class="event-card-date">Saturday, May 10 · 18:00</div>
+                        </div>
+                    </div>
+                    <div class="event-card" onclick="openEvent(1)">
+                        <img class="event-card-img" src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&q=80" alt="">
+                        <div class="event-card-overlay"></div>
+                        <div class="event-card-body">
+                            <div class="event-card-tag">💼 Business</div>
+                            <div class="event-card-name">Company Gala Dinner</div>
+                            <div class="event-card-date">Friday, May 16 · 20:30</div>
+                        </div>
+                    </div>
+                    <div class="event-card" onclick="openEvent(2)">
+                        <img class="event-card-img" src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&q=80" alt="">
+                        <div class="event-card-overlay"></div>
+                        <div class="event-card-body">
+                            <div class="event-card-tag">🎓 Graduation</div>
+                            <div class="event-card-name">Graduation Ceremony</div>
+                            <div class="event-card-date">Thursday, May 22 · 11:00</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Gamification banner -->
+                <div class="game-banner">
+                    <div class="game-banner-icon">🏆</div>
+                    <div class="game-banner-info">
+                        <div class="game-banner-title">3 events planned this month</div>
+                        <div class="game-banner-sub">Earn 80 XP per event · 2 badges unlocked</div>
+                    </div>
+                    <div style="color:var(--gold);font-size:20px">›</div>
+                </div>
+                <!-- Community -->
+                <div class="sect-title">
+                    <h3>Community Looks</h3>
+                    <a onclick="showToast('Community feed coming soon!')">Explore</a>
+                </div>
+                <div class="community-scroll">
+                    <div class="comm-card" onclick="showToast('❤️ +1 vote for María G.!')">
+                        <div class="comm-avatar">👩‍🦰</div>
+                        <div class="comm-user">María G.</div>
+                        <div class="comm-look">Night Glam</div>
+                        <div class="comm-caption">Ready for the gala in 45 min with Zenvy 🖤</div>
+                        <div class="comm-votes">❤️ 87 votes</div>
+                    </div>
+                    <div class="comm-card" onclick="showToast('❤️ +1 vote for Carlos M.!')">
+                        <div class="comm-avatar">👨‍💼</div>
+                        <div class="comm-user">Carlos M.</div>
+                        <div class="comm-look">Power Look</div>
+                        <div class="comm-caption">Interview nailed. Zenvy's timeline was key 💼</div>
+                        <div class="comm-votes">❤️ 64 votes</div>
+                    </div>
+                    <div class="comm-card" onclick="showToast('❤️ +1 vote for Sofía R.!')">
+                        <div class="comm-avatar">👩‍🎨</div>
+                        <div class="comm-user">Sofía R.</div>
+                        <div class="comm-look">Boho Chic</div>
+                        <div class="comm-caption">Perfect brunch look suggested by weather ☀️</div>
+                        <div class="comm-votes">❤️ 112 votes</div>
+                    </div>
+                </div>
+                <div style="height:16px"></div>
+            </div>
+        </div>
+
+        <!-- ══ EVENT DETAIL ══ -->
+        <div class="z-screen" id="screenEventDetail">
+            <div id="eventDetailContent"></div>
+        </div>
+
+        <!-- ══ TUTORIALS ══ -->
+        <div class="z-screen" id="screenTutorials">
+            <div style="padding-bottom:16px">
+                <div class="tut-header">
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;color:var(--ink)">Tutorials & Looks</div>
+                    <div style="font-size:12px;color:var(--ink3);margin-top:2px">Find your perfect style</div>
+                </div>
+                <!-- Fav tabs -->
+                <div class="favs-header" style="margin-top:16px">
+                    <button class="favs-tab active" id="tabAll" onclick="switchTutTab('all')">All Tutorials</button>
+                    <button class="favs-tab" id="tabFavs" onclick="switchTutTab('favs')">⭐ Favourites</button>
+                </div>
+                <!-- All tutorials section -->
+                <div id="tutAllSection">
+                    <div class="tut-search-wrap">
+                        <span class="tut-search-icon">🔍</span>
+                        <input class="tut-search" id="tutSearch" placeholder="Search tutorials..." oninput="filterTutorials()">
+                    </div>
+                    <div class="tut-tabs" id="tutCategoryTabs">
+                        <button class="tut-tab active" onclick="filterCat(this,'all')">All</button>
+                        <button class="tut-tab" onclick="filterCat(this,'makeup')">Makeup 💄</button>
+                        <button class="tut-tab" onclick="filterCat(this,'hair')">Hair 💇</button>
+                        <button class="tut-tab" onclick="filterCat(this,'outfit')">Outfit 👗</button>
+                        <button class="tut-tab" onclick="filterCat(this,'skincare')">Skincare 🧴</button>
+                    </div>
+                    <div id="tutList"></div>
+                </div>
+                <!-- Favs section -->
+                <div id="tutFavsSection" class="hidden">
+                    <div style="padding:0 24px;margin-bottom:12px;font-size:13px;color:var(--ink3)">Your saved looks & tutorials</div>
+                    <div id="favsList"></div>
+                    <div id="favsEmpty" class="hidden" style="padding:40px 24px;text-align:center;color:var(--ink3);font-size:13px">
+                        <div style="font-size:40px;margin-bottom:12px">⭐</div>
+                        <div>No favourites yet.<br>Save tutorials to access them quickly!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ CALENDAR ══ -->
+        <div class="z-screen" id="screenCalendar">
+            <div style="padding-bottom:20px">
+                <div class="cal-header">
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;color:var(--ink)">Calendar</div>
+                    <div style="font-size:12px;color:var(--ink3);margin-top:2px">All your events in one view</div>
+                </div>
+                <!-- Sync buttons -->
+                <div style="display:flex;gap:10px;padding:16px 24px 0">
+                    <button class="cal-sync-btn" style="margin:0;width:auto;flex:1" onclick="showToast('🔗 Synced with Google Calendar!')">
+                        <span>📅</span> Google Calendar
+                    </button>
+                    <button class="cal-sync-btn" style="margin:0;width:auto;flex:1" onclick="showToast('🍎 Synced with Apple Calendar!')">
+                        <span>🍎</span> Apple Calendar
+                    </button>
+                </div>
+                <!-- Calendar widget -->
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+                    <div class="cal-month" id="calMonthLabel">May 2025</div>
+                    <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+                </div>
+                <div class="cal-grid">
+                    <div class="cal-days-header">
+                        <div class="cal-day-hdr">Mon</div><div class="cal-day-hdr">Tue</div><div class="cal-day-hdr">Wed</div><div class="cal-day-hdr">Thu</div><div class="cal-day-hdr">Fri</div><div class="cal-day-hdr">Sat</div><div class="cal-day-hdr">Sun</div>
+                    </div>
+                    <div class="cal-days" id="calDays"></div>
+                </div>
+                <div style="padding:0 24px;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--ink);margin-bottom:12px">Scheduled Events</div>
+                <div class="cal-event-list" id="calEventList"></div>
+            </div>
+        </div>
+
+        <!-- ══ CHATBOT ══ -->
+        <div class="z-screen" id="screenChat">
+            <div style="display:flex;flex-direction:column;height:852px">
+                <div class="chat-header">
+                    <div class="chat-title-row">
+                        <div class="chat-avatar-lg">✨</div>
+                        <div>
+                            <div class="chat-bot-name">Zen, your AI stylist</div>
+                            <div class="chat-bot-status"><div class="chat-dot"></div> Online · ready to help</div>
+                        </div>
+                    </div>
+                    <div class="chat-suggestions" id="chatSugs">
+                        <div class="chat-sug" onclick="qChat('What outfit should I wear?')">👗 Outfit ideas</div>
+                        <div class="chat-sug" onclick="qChat('Tips for smokey eye makeup?')">💄 Makeup tips</div>
+                        <div class="chat-sug" onclick="qChat('Best hairstyle for a wedding?')">💇 Hairstyles</div>
+                        <div class="chat-sug" onclick="qChat('I am running late, what should I skip?')">⚡ Late mode help</div>
+                        <div class="chat-sug" onclick="qChat('Weather looks rainy, what to wear?')">🌧️ Weather looks</div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg bot">Hi! I'm Zen ✨ Your personal AI stylist. I can help you choose outfits, plan your beauty routine, or activate Late Mode if you're running behind. What can I do for you today?</div>
+                </div>
+                <div class="chat-input-row">
+                    <input class="chat-input" id="chatInput" placeholder="Ask Zen anything..." onkeydown="if(event.key==='Enter')sendChat()">
+                    <button class="chat-send" onclick="sendChat()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ EVERYDAY PLAN (PRO) ══ -->
+        <div class="z-screen" id="screenPlan">
+            <div class="pro-screen">
+                <div class="pro-bg-pattern"></div>
+                <div class="pro-content">
+                    <div class="pro-logo">📆</div>
+                    <div class="pro-badge">⭐ Zenvy Pro</div>
+                    <div class="pro-hl">Your <em>complete</em><br>daily planner</div>
+                    <div class="pro-desc">Everyday Plan merges your events, beauty routines, tasks, and agenda into one intelligent daily view — powered by AI.</div>
+                    <div class="pro-features">
+                        <div class="pro-feat">
+                            <div class="pro-feat-icon">🤖</div>
+                            <div class="pro-feat-text"><strong>AI Daily Schedule</strong>Automatically generated prep timelines for every event</div>
+                        </div>
+                        <div class="pro-feat">
+                            <div class="pro-feat-icon">📅</div>
+                            <div class="pro-feat-text"><strong>Full Calendar Sync</strong>Google & Apple Calendar integration in real time</div>
+                        </div>
+                        <div class="pro-feat">
+                            <div class="pro-feat-icon">🎨</div>
+                            <div class="pro-feat-text"><strong>Unlimited Looks</strong>Save & organise unlimited outfits and beauty looks</div>
+                        </div>
+                        <div class="pro-feat">
+                            <div class="pro-feat-icon">📊</div>
+                            <div class="pro-feat-text"><strong>Advanced Analytics</strong>Track your prep habits, streaks, and time savings</div>
+                        </div>
+                        <div class="pro-feat">
+                            <div class="pro-feat-icon">👑</div>
+                            <div class="pro-feat-text"><strong>Pro Badges & Rewards</strong>Unlock exclusive Zenvy Pro achievements</div>
+                        </div>
+                    </div>
+                    <button class="btn-pro" onclick="showToast('🎉 Starting your 7-day free trial!')">Start Free 7-Day Trial</button>
+                    <div class="pro-price">Then €4.99/month · Cancel anytime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ PROFILE ══ -->
+        <div class="z-screen" id="screenProfile">
+            <div style="padding-bottom:30px">
+                <div class="profile-header" style="padding-top:56px">
+                    <div class="profile-avatar">💁‍♀️</div>
+                    <div class="profile-uname" id="profileName">Laura Martínez</div>
+                    <div class="profile-email" id="profileEmail">laura@zenvy.app</div>
+                </div>
+                <!-- Badges -->
+                <div style="padding:16px 24px 0;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)">Achievements</div>
+                <div class="profile-badges" id="profileBadges">
+                    <div class="bdg earned"><div class="bdg-icon">🌟</div><div class="bdg-name">First Plan</div></div>
+                    <div class="bdg earned"><div class="bdg-icon">⚡</div><div class="bdg-name">Always on Time</div></div>
+                    <div class="bdg locked"><div class="bdg-icon">💎</div><div class="bdg-name">Premium Look</div></div>
+                    <div class="bdg locked"><div class="bdg-icon">🔥</div><div class="bdg-name">7-day Streak</div></div>
+                    <div class="bdg locked"><div class="bdg-icon">👑</div><div class="bdg-name">Zenvy Pro</div></div>
+                </div>
+                <div class="divider"></div>
+                <!-- Accessibility -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Accessibility</div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🔡</span> Large Text</div>
+                        <label class="toggle"><input type="checkbox" id="tgBigText" onchange="toggleBigText()"><div class="toggle-slider"></div></label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🔊</span> Audio Instructions</div>
+                        <label class="toggle"><input type="checkbox" id="tgAudio" onchange="showToast('🔊 Audio instructions: '+(this.checked?'ON':'OFF'))"><div class="toggle-slider"></div></label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🌍</span> Language</div>
+                        <div style="font-size:13px;color:var(--ink3)">English ›</div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🎨</span> High Contrast</div>
+                        <label class="toggle"><input type="checkbox" onchange="showToast('High contrast mode coming soon!')"><div class="toggle-slider"></div></label>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Notifications</div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🔔</span> Event Reminders</div>
+                        <label class="toggle"><input type="checkbox" checked onchange="showToast('Reminders: '+(this.checked?'ON':'OFF'))"><div class="toggle-slider"></div></label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>💌</span> Community Votes</div>
+                        <label class="toggle"><input type="checkbox" checked onchange="showToast('Community notifications: '+(this.checked?'ON':'OFF'))"><div class="toggle-slider"></div></label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label"><span>🏆</span> XP & Badges</div>
+                        <label class="toggle"><input type="checkbox" checked onchange="showToast('Gamification alerts: '+(this.checked?'ON':'OFF'))"><div class="toggle-slider"></div></label>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <!-- Account -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Account</div>
+                    <div class="settings-row" style="cursor:pointer" onclick="showToast('Adaptive learning is ON — Zenvy learns your real prep times!')">
+                        <div class="settings-label"><span>🤖</span> Adaptive AI Learning</div>
+                        <label class="toggle"><input type="checkbox" checked onclick="event.stopPropagation()"><div class="toggle-slider"></div></label>
+                    </div>
+                    <div class="settings-row" style="cursor:pointer" onclick="goScreen('screenPlan')">
+                        <div class="settings-label"><span>⭐</span> Upgrade to Pro</div>
+                        <div style="font-size:13px;color:var(--gold)">Upgrade ›</div>
+                    </div>
+                    <div class="settings-row" style="cursor:pointer" onclick="doLogout()">
+                        <div class="settings-label" style="color:var(--red)"><span>🚪</span> Sign Out</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /screen -->
+
+    <!-- BOTTOM NAV -->
+    <div class="bnav" id="bnav" style="display:none">
+        <button class="bnav-btn active" id="btn-home" onclick="goTab('home')">
+            <div class="bnav-icon">🏠</div>
+            <div class="bnav-label">Home</div>
+        </button>
+        <button class="bnav-btn" id="btn-tutorials" onclick="goTab('tutorials')">
+            <div class="bnav-icon">🎬</div>
+            <div class="bnav-label">Tutorials</div>
+        </button>
+        <button class="bnav-plus" id="bnavPlus" onclick="openAddEvent()">+</button>
+        <button class="bnav-btn" id="btn-calendar" onclick="goTab('calendar')">
+            <div class="bnav-icon">📅</div>
+            <div class="bnav-label">Calendar</div>
+        </button>
+        <button class="bnav-btn" id="btn-chat" onclick="goTab('chat')">
+            <div class="bnav-icon">💬</div>
+            <div class="bnav-label">Ask Zen</div>
+        </button>
+    </div>
+
+    <!-- TOP CORNER ACTIONS -->
+    <div id="topActions" class="top-actions" style="display:none">
+        <button class="top-action-btn left" id="btn-plan" onclick="goTab('plan')">
+            <span class="top-action-icon">📆</span>
+            <span class="top-action-label">Everyday</span>
+        </button>
+
+        <button class="top-action-btn right" id="btn-profile" onclick="goTab('profile')">
+            <span class="top-action-icon">👤</span>
+            <span class="top-action-label">Profile</span>
+        </button>
+    </div>
+
+    <!-- ADD EVENT MODAL -->
+    <div class="modal-overlay hidden" id="addEventModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-title">New Event</div>
+            <div class="modal-body">
+                <label class="field-label">Event name</label>
+                <input class="field-input" id="newEventName" placeholder="e.g. Birthday Party">
+                <label class="field-label">Date</label>
+                <input class="field-input" type="date" id="newEventDate">
+                <label class="field-label">Departure time</label>
+                <input class="field-input" type="time" id="newEventTime" value="19:00">
+                <label class="field-label">Location</label>
+                <input class="field-input" id="newEventLocation" placeholder="e.g. Hotel Arts, Barcelona">
+                <label class="field-label">Transport</label>
+                <select class="field-input" id="newEventTransport">
+                    <option value="taxi">🚕 Taxi / Cabify (12 min)</option>
+                    <option value="public">🚇 Public transport (20 min)</option>
+                    <option value="car">🚗 Car (10 min)</option>
+                    <option value="walking">🚶 Walking (25 min)</option>
+                </select>
+                <label class="field-label">Style for this event</label>
+                <select class="field-input" id="newEventStyle">
+                    <option value="formal">👗 Formal / Gala</option>
+                    <option value="business">💼 Business / Professional</option>
+                    <option value="party">🥂 Party / Cocktail</option>
+                    <option value="casual">😎 Casual / Brunch</option>
+                </select>
+                <label class="field-label">Experience level</label>
+                <select class="field-input" id="newEventExp">
+                    <option value="beginner">🌱 Beginner</option>
+                    <option value="intermediate">⭐ Intermediate</option>
+                    <option value="advanced">💎 Advanced</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm-out" onclick="closeAddEvent()">Cancel</button>
+                <button class="btn-sm-gold" onclick="submitNewEvent()">Create Event ✨</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toastBar"></div>
+
+</div><!-- /shell -->
+
+<script>
+    // ═══════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════
+    let currentScreen = 'screenSplash';
+    let currentTab = 'home';
+    let userName = 'Laura';
+    let userEmail = 'laura@zenvy.app';
+    let bigTextOn = false;
+    let toastTimer = null;
+    let calYear = 2025, calMonth = 4; // May = index 4
+    let favTutorials = new Set();
+    let assignedTutorials = {}; // tutId -> eventIndex
+
+    const EVENTS = [
+        {
+            name:"Sofia & Marc's Wedding", tag:"🥂 Wedding", type:"formal",
+            date:"Saturday, May 10, 2025", time:"18:00",
+            img:"https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+            transport:"taxi", travelTime:12, color:"#8B3A52"
+        },
+        {
+            name:"Company Gala Dinner", tag:"💼 Business", type:"business",
+            date:"Friday, May 16, 2025", time:"20:30",
+            img:"https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
+            transport:"taxi", travelTime:12, color:"#2c3e50"
+        },
+        {
+            name:"Graduation Ceremony", tag:"🎓 Graduation", type:"formal",
+            date:"Thursday, May 22, 2025", time:"11:00",
+            img:"https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
+            transport:"car", travelTime:10, color:"#C9A96E"
+        }
+    ];
+
+    const TUTORIALS = [
+        {id:0,name:"French Braid for Formal Events",emoji:"👸",dur:"12 min",level:"Intermediate",cat:"hair",img:"https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=200&q=70",desc:"Step-by-step guide to create an elegant French braid that holds all night."},
+        {id:1,name:"Classic Smokey Eye",emoji:"👁️",dur:"15 min",level:"Advanced",cat:"makeup",img:"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=70",desc:"Master the timeless smokey eye with blending tips and liner tricks."},
+        {id:2,name:"5-Minute Natural Makeup",emoji:"🌸",dur:"5 min",level:"Beginner",cat:"makeup",img:"https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=200&q=70",desc:"Quick everyday look that enhances your natural features."},
+        {id:3,name:"Beach Waves in 7 Minutes",emoji:"🌊",dur:"7 min",level:"Beginner",cat:"hair",img:"https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=200&q=70",desc:"Create effortless beach waves with a curling iron or straightener."},
+        {id:4,name:"Power Look: How to Dress by Sector",emoji:"📊",dur:"6 min",level:"Beginner",cat:"outfit",img:"https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&q=70",desc:"Decode dress codes for different industries and occasions."},
+        {id:5,name:"Glitter Eyes Step by Step",emoji:"✨",dur:"10 min",level:"Intermediate",cat:"makeup",img:"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=70",desc:"Bold glitter look perfect for parties and evening events."},
+        {id:6,name:"AM Skincare Routine",emoji:"🧴",dur:"8 min",level:"Beginner",cat:"skincare",img:"https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=200&q=70",desc:"Essential morning skincare steps for a glowing complexion."},
+        {id:7,name:"Colour Coordination: Neutrals",emoji:"🎨",dur:"4 min",level:"Beginner",cat:"outfit",img:"https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&q=70",desc:"How to mix and match neutral tones for a polished look."},
+    ];
+
+    const BASE_STEPS = [
+        {key:'shower',   label:'Shower',              emoji:'🚿',dur:15,essential:true},
+        {key:'skincare', label:'Skincare routine',     emoji:'🧴',dur:10,essential:false},
+        {key:'makeup',   label:'Makeup',               emoji:'💄',dur:20,essential:false},
+        {key:'hair',     label:'Hair styling',         emoji:'💇',dur:15,essential:true},
+        {key:'outfit',   label:'Choose & put on look', emoji:'👗',dur:10,essential:true},
+        {key:'details',  label:'Accessories & details',emoji:'💍',dur:8, essential:false},
+        {key:'bag',      label:'Prepare bag / wallet', emoji:'👜',dur:5, essential:true},
+        {key:'leave',    label:'Leave home',           emoji:'🚪',dur:0, essential:true},
+    ];
+
+    const LOOKS = [
+        {id:0,name:'Classic Elegance',emoji:'🖤',color:'#1a1a2e',accent:'#c9a96e',tags:['formal','business','gala'],prep_time:75,rating:4.9,votes:312,desc:'Dark suit, white shirt, gold accessories. Timeless.'},
+        {id:1,name:'Boho Chic',emoji:'🌸',color:'#f5e6d3',accent:'#c97b5a',tags:['casual','outdoor','brunch'],prep_time:45,rating:4.7,votes:218,desc:'Floral dress, straw hat, sandals. Effortlessly free.'},
+        {id:2,name:'Power Look',emoji:'💼',color:'#2c3e50',accent:'#e74c3c',tags:['business','interview','meeting'],prep_time:60,rating:4.8,votes:275,desc:'Structured blazer, straight trousers, briefcase.'},
+        {id:3,name:'Night Glam',emoji:'✨',color:'#0d0d1a',accent:'#9b59b6',tags:['party','cocktail','date'],prep_time:90,rating:4.95,votes:401,desc:'Sequin dress, heels, metallic clutch. Unforgettable.'},
+        {id:4,name:'Smart Casual',emoji:'👟',color:'#e8f4f8',accent:'#2980b9',tags:['casual','lunch','social'],prep_time:30,rating:4.6,votes:189,desc:'Chinos, polo shirt, clean white sneakers.'},
+    ];
+
+    const ONBOARDING_QS = [
+        {q:"How often do you attend social events?",opts:["Almost every week","A few times a month","A few times a year","Rarely"]},
+        {q:"What type of events do you attend most?",opts:["Parties & celebrations","Business / professional","Weddings & galas","Casual dinners & brunches"]},
+        {q:"How would you describe your makeup experience?",opts:["Complete beginner","I know the basics","Intermediate — I follow tutorials","Advanced / professional"]},
+        {q:"How do you usually find style inspiration?",opts:["TikTok & Instagram","Pinterest mood boards","YouTube tutorials","I have my own style — no need!"]},
+        {q:"How far in advance do you start planning your look?",opts:["Same day — last minute","The day before","A few days ahead","A week or more"]},
+        {q:"What is your biggest challenge when getting ready?",opts:["Running out of time","Choosing the right outfit","Doing my makeup / hair","Feeling stressed and disorganised"]},
+        {q:"What is your personal style?",opts:["Elegant & sophisticated","Casual & minimalist","Bold & experimental","Romantic & feminine"]},
+        {q:"Do you usually follow step-by-step tutorials?",opts:["Yes, I love guided steps","Sometimes, if they are simple","Not really — I improvise","I would if I could find good ones"]},
+        {q:"How important is punctuality to you?",opts:["Very important — I hate being late","I try but often run behind","I am always late — it is who I am","Depends on the event"]},
+        {q:"What would make a preparation app most useful for you?",opts:["A personalised timeline","Outfit & look suggestions","Skill-level tutorials","Stress-free reminders"]},
+    ];
+
+    let onbStep = 0;
+    let onbAnswers = new Array(10).fill(null);
+
+    // ═══════════════════════════════════════════
+    // SCREEN ROUTING
+    // ═══════════════════════════════════════════
+    function goScreen(id) {
+        document.querySelectorAll('.z-screen').forEach(s => {
+            s.classList.remove('active');
+        });
+
+        document.getElementById(id).classList.add('active');
+        currentScreen = id;
+
+        const lightScreens = [
+            'screenHome',
+            'screenTutorials',
+            'screenCalendar',
+            'screenEventDetail',
+            'screenProfile',
+            'screenLogin',
+            'screenRegister',
+            'screenOnboarding'
+        ];
+
+        const isLight = lightScreens.includes(id);
+        document.getElementById('statusbar').style.color = isLight ? 'var(--ink)' : '#fff';
+
+        const hasAppNav = [
+            'screenHome',
+            'screenTutorials',
+            'screenCalendar',
+            'screenChat',
+            'screenPlan',
+            'screenProfile',
+            'screenEventDetail'
+        ].includes(id);
+
+        document.getElementById('bnav').style.display = hasAppNav ? 'flex' : 'none';
+        document.getElementById('topActions').style.display = hasAppNav ? 'block' : 'none';
+
+        document.getElementById('mainScreen').scrollTop = 0;
+    }
+
+    function goTab(tab) {
+        currentTab = tab;
+
+        const map = {
+            home:'screenHome',
+            tutorials:'screenTutorials',
+            calendar:'screenCalendar',
+            chat:'screenChat',
+            plan:'screenPlan',
+            profile:'screenProfile'
+        };
+
+        goScreen(map[tab]);
+
+        ['home','tutorials','calendar','chat','plan','profile'].forEach(t => {
+            const b = document.getElementById('btn-' + t);
+            if (b) b.classList.toggle('active', t === tab);
+        });
+
+        if (tab === 'calendar') renderCalendar();
+        if (tab === 'tutorials') renderTutorials();
+    }
+
+    // ═══════════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════════
+    function doQuickLogin() {
+        const nameEl = document.getElementById('regName');
+        if(nameEl && nameEl.value) userName = nameEl.value.split(' ')[0];
+        const emailEl = document.getElementById('regEmail');
+        if(emailEl && emailEl.value) userEmail = emailEl.value;
+        document.getElementById('homeUserName').textContent = userName;
+        document.getElementById('profileName').textContent = userName + ' Martínez';
+        document.getElementById('profileEmail').textContent = userEmail || 'laura@zenvy.app';
+        goTab('home');
+        setTimeout(()=>showToast('✨ Welcome back, '+userName+'!'), 400);
+    }
+
+    function doLogout() {
+        goScreen('screenSplash');
+        document.getElementById('bnav').style.display = 'none';
+        showToast('👋 Signed out successfully');
+    }
+
+    function startOnboarding() {
+        const n = document.getElementById('regName').value;
+        if(n) userName = n.split(' ')[0];
+        onbStep = 0; onbAnswers = new Array(10).fill(null);
+        goScreen('screenOnboarding');
+        document.getElementById('statusbar').style.color = 'var(--ink)';
+        renderOnbStep();
+    }
+
+    // ═══════════════════════════════════════════
+    // ONBOARDING
+    // ═══════════════════════════════════════════
+    function renderOnbStep() {
+        const q = ONBOARDING_QS[onbStep];
+        document.getElementById('onbBar').style.width = ((onbStep+1)/10*100)+'%';
+        document.getElementById('onbCounter').textContent = 'Question '+(onbStep+1)+' of 10';
+        document.getElementById('onbPrevBtn').style.display = onbStep===0?'none':'block';
+        document.getElementById('onbNextBtn').textContent = onbStep===9?'Finish ✨':'Next →';
+        const html = `<div class="onb-q">${q.q}</div><div class="onb-opts">` +
+            q.opts.map((o,i)=>`<div class="onb-opt ${onbAnswers[onbStep]===i?'selected':''}" onclick="selectOnb(${i})">${o}</div>`).join('') +
+            '</div>';
+        document.getElementById('onbContent').innerHTML = html;
+    }
+    function selectOnb(i) { onbAnswers[onbStep]=i; renderOnbStep(); }
+    function onbNext() {
+        if(onbAnswers[onbStep]===null){ showToast('Please select an option'); return; }
+        if(onbStep<9){ onbStep++; renderOnbStep(); }
+        else {
+            // Done — go to home
+            document.getElementById('homeUserName').textContent = userName;
+            document.getElementById('profileName').textContent = userName + ' Martínez';
+            goTab('home');
+            showToast('🎉 Profile created! Welcome, '+userName+'!');
+        }
+    }
+    function onbPrev() { if(onbStep>0){ onbStep--; renderOnbStep(); } }
+
+    // ═══════════════════════════════════════════
+    // EVENT DETAIL
+    // ═══════════════════════════════════════════
+    let lateMode = false;
+
+    function openEvent(idx) {
+        const ev = EVENTS[idx];
+        lateMode = false;
+        renderEventDetail(ev, idx);
+        goScreen('screenEventDetail');
+        document.getElementById('statusbar').style.color = '#fff';
+    }
+
+    function renderEventDetail(ev, idx, late=false) {
+        const weather = getMockWeather(ev.time);
+        const timeline = buildTimeline(ev.time, ev.type, ev.travelTime, 1.0, late);
+        const looks = suggestLooks(ev.type, weather);
+        const reminders = buildReminders(ev.time, timeline);
+        const tuts = getTutorials(ev.type);
+
+        const outfitChipsHtml = looks.map((l,i)=>`
+    <div class="outfit-chip" style="border-color:${l.accent};color:${l.accent};background:${l.color}22"
+      onclick="showToast('${l.emoji} ${l.name} selected for this event!')">
+      ${l.emoji} ${l.name}
+    </div>`).join('');
+
+        const tlHtml = timeline.map((step,i)=>`
+    <div class="tl-item ${late&&!step.essential?'hidden':''}">
+      <div class="tl-line-col">
+        <div class="tl-dot" id="dot${i}">${step.emoji}</div>
+        ${i<timeline.length-1?'<div class="tl-connector"></div>':''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-time">${step.start}${step.end&&step.key!=='leave'?' — '+step.end:''}</div>
+        <div class="tl-label">${step.label}</div>
+        <div class="tl-dur">${step.duration>0?step.duration+' min':step.key==='leave'?'Travel: '+step.duration+' min':''} ${late&&step.essential?'<span style="color:var(--red);font-size:10px">⚡ Essential</span>':''}</div>
+      </div>
+    </div>`).join('');
+
+        const remHtml = reminders.map(r=>`
+    <div class="reminder-item">
+      <div class="reminder-dot" style="background:${r.color}22">${r.emoji}</div>
+      <div class="reminder-info">
+        <div class="reminder-time">${r.time} — ${r.label}</div>
+        <div class="reminder-msg">${r.msg}</div>
+      </div>
+    </div>`).join('');
+
+        const tutHtml = tuts.map((t,i)=>`
+    <div class="tut-suggestion" onclick="showToast('📌 Tutorial assigned to ${ev.name}!')">
+      <div class="tut-icon">${t.emoji}</div>
+      <div class="tut-info">
+        <div class="tut-name">${t.name}</div>
+        <div class="tut-meta">${t.dur} · ${t.level}</div>
+      </div>
+      <div style="font-size:13px;color:var(--sage)">Assign →</div>
+    </div>`).join('');
+
+        const lateNote = late ? `<div style="background:#fef5f5;border:1px solid #f8d7d7;border-radius:14px;padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+    <div style="font-size:22px">⚡</div>
+    <div><div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:2px">Late Mode Active</div><div style="font-size:12px;color:var(--ink3)">Only essential steps shown. You can do it!</div></div></div>` : '';
+
+        document.getElementById('eventDetailContent').innerHTML = `
+    <div>
+      <div class="event-detail-hero">
+        <img src="${ev.img}" alt="">
+        <div class="event-detail-hero-overlay"></div>
+        <button class="back-btn" onclick="goTab('home')">←</button>
+      </div>
+      <div class="detail-content">
+        <div class="detail-tag">${ev.tag}</div>
+        <div class="detail-name">${ev.name}</div>
+        <div class="detail-date">${ev.date} · Departure ${getLeaveTime(ev.time, ev.travelTime)}</div>
+        <!-- WEATHER -->
+        <div class="weather-block">
+          <div class="weather-emoji">${weather.emoji}</div>
+          <div class="weather-info">
+            <div class="weather-temp">${weather.temp}°C</div>
+            <div class="weather-label">${weather.label} · Today's weather</div>
+            <div class="weather-outfits">Outfit suggestions adapted to weather 👇</div>
+          </div>
+        </div>
+        <!-- OUTFIT CHIPS -->
+        <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:10px">Suggested Looks</div>
+        <div class="outfit-chips">${outfitChipsHtml}</div>
+        <!-- ACTION BUTTONS -->
+        ${lateNote}
+        <div class="detail-actions">
+          <button class="btn-start" onclick="startPrep(${idx})">▶ Start Prep</button>
+          <button class="btn-late" onclick="activateLateMode(${idx})">⚡ Late Mode</button>
+        </div>
+        <!-- TIMELINE -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--ink);margin-bottom:14px">Preparation Timeline</div>
+        <div class="timeline-wrap">${tlHtml}</div>
+        <!-- REMINDERS -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--ink);margin-bottom:12px">Smart Reminders</div>
+        ${remHtml}
+        <!-- TUTORIALS -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--ink);margin:16px 0 12px">Suggested Tutorials</div>
+        ${tutHtml}
+      </div>
+    </div>`;
+    }
+
+    function startPrep(idx) {
+        showToast('🚀 Preparation started! Follow your timeline. You\'ve got this!');
+        // Mark first dot as done
+        setTimeout(()=>{
+            const d = document.getElementById('dot0');
+            if(d){ d.style.background='var(--gold)'; d.style.borderColor='var(--gold)'; }
+            showToast('✅ Step 1 complete! Keep going 💪');
+        }, 1500);
+    }
+
+    function activateLateMode(idx) {
+        lateMode = true;
+        renderEventDetail(EVENTS[idx], idx, true);
+        showToast('⚡ Late Mode on! Only essential steps shown.');
+    }
+
+    // ═══════════════════════════════════════════
+    // ADD EVENT
+    // ═══════════════════════════════════════════
+    function openAddEvent() {
+        document.getElementById('addEventModal').classList.remove('hidden');
+        // Set default date to today+7
+        const d = new Date(); d.setDate(d.getDate()+7);
+        document.getElementById('newEventDate').value = d.toISOString().split('T')[0];
+    }
+    function closeAddEvent() { document.getElementById('addEventModal').classList.add('hidden'); }
+
+    function submitNewEvent() {
+        const name = document.getElementById('newEventName').value.trim();
+        if(!name){ showToast('Please enter an event name'); return; }
+        const date = document.getElementById('newEventDate').value;
+        const time = document.getElementById('newEventTime').value;
+        const loc  = document.getElementById('newEventLocation').value || 'Barcelona';
+        const transport = document.getElementById('newEventTransport').value;
+        const style = document.getElementById('newEventStyle').value;
+        const travelMap = {taxi:12,public:20,car:10,walking:25,cabify:11};
+        const travelTime = travelMap[transport]||12;
+        const colorMap = {formal:'#8B3A52',business:'#2c3e50',party:'#C9A96E',casual:'#7A9E8E'};
+        const imgMap = {
+            formal:'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
+            business:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
+            party:'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+            casual:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+        };
+        const tagMap = {formal:'✨ Formal',business:'💼 Business',party:'🎉 Party',casual:'😎 Casual'};
+        const d = new Date(date+'T12:00:00');
+        const dateStr = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        const newEv = {
+            name, tag:tagMap[style]||'📅 Event', type:style,
+            date:dateStr, time, img:imgMap[style]||imgMap.formal,
+            transport, travelTime, color:colorMap[style]||'#C9A96E'
+        };
+        EVENTS.push(newEv);
+        // Add card to scroll
+        const scroll = document.getElementById('eventsScroll');
+        const idx = EVENTS.length-1;
+        const card = document.createElement('div');
+        card.className='event-card';
+        card.onclick=()=>openEvent(idx);
+        card.innerHTML=`<img class="event-card-img" src="${newEv.img}" alt=""><div class="event-card-overlay"></div><div class="event-card-body"><div class="event-card-tag">${newEv.tag}</div><div class="event-card-name">${newEv.name}</div><div class="event-card-date">${newEv.date} · ${time}</div></div>`;
+        scroll.appendChild(card);
+        // Add to calendar events list
+        closeAddEvent();
+        showToast('🎉 Event "'+name+'" added! +80 XP earned!');
+        // Update XP
+        const xp = document.getElementById('xpBar');
+        if(xp){ const cur=parseFloat(xp.style.width)||62; xp.style.width=Math.min(cur+8,100)+'%'; }
+    }
+
+    // ═══════════════════════════════════════════
+    // TUTORIALS
+    // ═══════════════════════════════════════════
+    let tutCurCat = 'all';
+    let tutSearchQ = '';
+    let tutTab = 'all';
+
+    function renderTutorials() {
+        renderTutList();
+        renderFavsList();
+    }
+
+    function renderTutList() {
+        const list = document.getElementById('tutList');
+        if(!list) return;
+        const filtered = TUTORIALS.filter(t=>{
+            const matchCat = tutCurCat==='all' || t.cat===tutCurCat;
+            const matchQ = !tutSearchQ || t.name.toLowerCase().includes(tutSearchQ.toLowerCase());
+            return matchCat && matchQ;
+        });
+        list.innerHTML = filtered.map(t=>`
+    <div class="tut-card" data-cat="${t.cat}" data-id="${t.id}">
+      <img class="tut-thumb" src="${t.img}" alt="">
+      <div class="tut-card-info">
+        <div class="tut-card-name">${t.emoji} ${t.name}</div>
+        <div class="tut-card-meta">${t.dur} · ${t.level}</div>
+        <div class="tut-card-actions">
+          <button class="pill pill-fav ${favTutorials.has(t.id)?'active':''}" onclick="toggleFav(${t.id},this)">${favTutorials.has(t.id)?'★ Saved':'☆ Save'}</button>
+          <button class="pill pill-assign" onclick="assignTutorial(${t.id})">+ Assign to event</button>
+        </div>
+      </div>
+    </div>`).join('');
+        if(!filtered.length) list.innerHTML='<div style="padding:30px 24px;text-align:center;color:var(--ink3);font-size:13px">No tutorials found. Try a different search.</div>';
+    }
+
+    function renderFavsList() {
+        const list = document.getElementById('favsList');
+        const empty = document.getElementById('favsEmpty');
+        if(!list) return;
+        const favs = TUTORIALS.filter(t=>favTutorials.has(t.id));
+        if(!favs.length){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        list.innerHTML = favs.map(t=>`
+    <div class="fav-card">
+      <div class="fav-thumb">${t.emoji}</div>
+      <div class="fav-info">
+        <div class="fav-name">${t.name}</div>
+        <div class="fav-meta">${t.dur} · ${t.level}</div>
+      </div>
+      <button class="btn-remove-fav" onclick="toggleFav(${t.id},null)">✕</button>
+    </div>`).join('');
+    }
+
+    function toggleFav(id, btn) {
+        if(favTutorials.has(id)){
+            favTutorials.delete(id);
+            showToast('Removed from favourites');
+        } else {
+            favTutorials.add(id);
+            showToast('⭐ Added to favourites!');
+        }
+        renderTutList();
+        renderFavsList();
+    }
+
+    function assignTutorial(id) {
+        if(!EVENTS.length){ showToast('No events yet. Create one first!'); return; }
+        const names = EVENTS.map((e,i)=>`${i+1}. ${e.name}`).join('\n');
+        showToast('📌 Tutorial assigned to '+EVENTS[0].name+'!');
+    }
+
+    function filterCat(btn, cat) {
+        tutCurCat = cat;
+        document.querySelectorAll('.tut-tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTutList();
+    }
+    function filterTutorials() { tutSearchQ=document.getElementById('tutSearch').value; renderTutList(); }
+    function switchTutTab(tab) {
+        tutTab=tab;
+        document.getElementById('tabAll').classList.toggle('active', tab==='all');
+        document.getElementById('tabFavs').classList.toggle('active', tab==='favs');
+        document.getElementById('tutAllSection').classList.toggle('hidden', tab==='favs');
+        document.getElementById('tutFavsSection').classList.toggle('hidden', tab==='all');
+        if(tab==='favs') renderFavsList();
+    }
+
+    // ═══════════════════════════════════════════
+    // CALENDAR
+    // ═══════════════════════════════════════════
+    function renderCalendar() {
+        const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+        document.getElementById('calMonthLabel').textContent = months[calMonth]+' '+calYear;
+        const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+        const adjust = (firstDay+6)%7; // Mon start
+        const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+        const today = new Date();
+        // Event days
+        const eventDays = new Set([10,16,22]);
+        let html='';
+        for(let i=0;i<adjust;i++) html+=`<div class="cal-day empty"></div>`;
+        for(let d=1;d<=daysInMonth;d++){
+            const isToday = (d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear());
+            const hasEvent = eventDays.has(d);
+            html+=`<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="calDayClick(${d})">${d}</div>`;
+        }
+        document.getElementById('calDays').innerHTML=html;
+        // Event list
+        document.getElementById('calEventList').innerHTML = EVENTS.map((e,i)=>`
+    <div class="cal-event-item" onclick="openEvent(${i})">
+      <div class="cal-event-color" style="background:${e.color}"></div>
+      <div class="cal-event-info">
+        <div class="cal-event-name">${e.name}</div>
+        <div class="cal-event-date">${e.date} · ${e.time}</div>
+      </div>
+      <div style="font-size:18px;color:var(--ink3)">›</div>
+    </div>`).join('');
+    }
+    function changeMonth(dir) { calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+    function calDayClick(d) { showToast('📅 Selected: '+d+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][calMonth]); }
+
+    // ═══════════════════════════════════════════
+    // CHATBOT
+    // ═══════════════════════════════════════════
+    function sendChat() {
+        const inp = document.getElementById('chatInput');
+        const msg = inp.value.trim(); if(!msg) return;
+        inp.value='';
+        appendMsg(msg,'user');
+        const tid='t'+Date.now();
+        const td=document.createElement('div');
+        td.id=tid; td.className='chat-msg bot'; td.textContent='...'; td.style.opacity='.4';
+        document.getElementById('chatMessages').appendChild(td);
+        scrollChat();
+        setTimeout(()=>{
+            td.remove();
+            appendMsg(getChatbotReply(msg),'bot');
+        },900);
+    }
+    function qChat(text){ document.getElementById('chatInput').value=text; sendChat(); }
+    function appendMsg(text,type){
+        const d=document.createElement('div'); d.className='chat-msg '+type; d.textContent=text;
+        document.getElementById('chatMessages').appendChild(d); scrollChat();
+    }
+    function scrollChat(){ const c=document.getElementById('chatMessages'); c.scrollTop=c.scrollHeight; }
+
+    function getChatbotReply(msg) {
+        msg=msg.toLowerCase();
+        if(msg.includes('outfit')||msg.includes('wear')||msg.includes('look')) return '👗 For the best outfit, add your event to Zenvy and I\'ll suggest 3 personalised looks based on the event type and today\'s weather. Your top pick right now: Night Glam ✨';
+        if(msg.includes('makeup')||msg.includes('smokey')||msg.includes('eye')) return '💄 For a smokey eye, start with a primer, apply dark shadow to the crease, blend outward, and add liner. Check out the "Classic Smokey Eye" tutorial in your Tutorials tab — 15 min, step by step!';
+        if(msg.includes('hair')||msg.includes('braid')||msg.includes('hairstyle')) return '💇 For a wedding, a French braid or an elegant updo works beautifully. I\'ve found the "French Braid for Formal Events" tutorial (12 min) — perfect for you! Want me to assign it to your event?';
+        if(msg.includes('late')||msg.includes('running')||msg.includes('time')||msg.includes('skip')) return '⚡ Activate Late Mode on your event detail page! It compresses your schedule to only essential steps: Shower → Hair → Outfit → Leave. You can skip makeup or accessories today.';
+        if(msg.includes('weather')||msg.includes('rain')||msg.includes('cloudy')) return '🌧️ Rainy day? Go for chic waterproof options — a structured blazer over a midi dress with ankle boots is perfect. I\'d recommend the "Power Look" or "Smart Casual" for today\'s weather.';
+        if(msg.includes('wedding')) return '💒 For a wedding, aim for 90+ minutes of prep. Classic Elegance or Night Glam are top picks. Remember: avoid white! Start with skincare, then hair, then makeup, then outfit.';
+        if(msg.includes('stress')||msg.includes('anxious')||msg.includes('nervous')) return '💆‍♀️ Take a deep breath! Open your event in Zenvy and follow the timeline step by step. Put on your favourite music and enjoy the ritual. You always look amazing 🌟';
+        if(msg.includes('tutorial')||msg.includes('guide')) return '🎬 Head to the Tutorials tab to browse guides by makeup, hair, outfit, and skincare. You can save favourites and assign tutorials directly to your events!';
+        if(msg.includes('xp')||msg.includes('points')||msg.includes('badge')||msg.includes('level')) return '🏆 You earn XP by adding events, completing prep timelines, and sharing looks with the community. You\'re Level 7 — only 140 XP left to reach Level 8! Keep your streak going 🔥';
+        return '✨ Great question! I\'m here to help with outfits, makeup, hair, scheduling, and more. Try asking: "What should I wear?", "How do I do a smokey eye?", or "I\'m running late — help!"';
+    }
+
+    // ═══════════════════════════════════════════
+    // TIMELINE HELPERS
+    // ═══════════════════════════════════════════
+    function buildTimeline(eventTime, eventType, travelTime, factor, lateMode=false) {
+        const typeF = {gala:1.3,formal:1.3,party:1.1,cocktail:1.1,business:1.0,casual:0.75,brunch:0.75}[eventType]||1.0;
+        const [eh,em]=eventTime.split(':').map(Number);
+        const evMin=eh*60+em, leaveMin=evMin-travelTime;
+        let cursor=leaveMin;
+        const rev=[...BASE_STEPS].reverse();
+        const tl=[];
+        for(const step of rev){
+            if(step.key==='leave'){
+                tl.push({...step,start:mT(leaveMin),end:mT(evMin),duration:travelTime});
+                continue;
+            }
+            const dur=Math.round(step.dur*typeF*factor);
+            const end=cursor; cursor-=dur;
+            tl.push({...step,start:mT(cursor),end:mT(end),duration:dur});
+        }
+        return tl.reverse();
+    }
+    function mT(m){ const h=Math.floor(((m%1440)+1440)%1440/60),mn=((m%60)+60)%60; return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0'); }
+    function getLeaveTime(t,travel){ const [h,m]=t.split(':').map(Number); const lm=h*60+m-travel; return mT(lm); }
+
+    function getMockWeather(time) {
+        const m=new Date().getMonth()+1;
+        if(m>=6&&m<=8) return {condition:'sunny',emoji:'☀️',temp:26+Math.floor(Math.random()*8),label:'Sunny'};
+        if(m>=12||m<=2) return {condition:'cold',emoji:'🥶',temp:4+Math.floor(Math.random()*8),label:'Cold'};
+        if(m>=3&&m<=5) return {condition:'mild',emoji:'🌤️',temp:15+Math.floor(Math.random()*7),label:'Mild'};
+        return {condition:'rainy',emoji:'🌧️',temp:10+Math.floor(Math.random()*8),label:'Rainy'};
+    }
+
+    function suggestLooks(eventType, weather) {
+        return LOOKS.map(l=>{
+            let s=0;
+            if(l.tags.includes(eventType)) s+=3;
+            if(weather.condition==='sunny'&&l.tags.includes('outdoor')) s+=2;
+            if(weather.condition==='rainy'&&l.tags.includes('casual')) s+=1;
+            if(weather.condition==='cold'&&l.prep_time>50) s+=1;
+            return {...l,score:s};
+        }).sort((a,b)=>b.score-a.score).slice(0,3);
+    }
+
+    function buildReminders(eventTime, steps) {
+        const [ph,pm]=(steps[0]?.start||eventTime).split(':').map(Number);
+        const prepMin=ph*60+pm;
+        const [eh,em]=eventTime.split(':').map(Number);
+        const evtMin=eh*60+em;
+        return [
+            {time:mT(prepMin-15),label:'15 min before starting',msg:'Prepare your space! Put on your favourite music.',emoji:'🔔',color:'#f39c12'},
+            {time:mT(prepMin),label:'Start preparation',msg:'Time to start! Follow your timeline step by step.',emoji:'🚀',color:'#27ae60'},
+            {time:mT(evtMin-30),label:'30 min to event',msg:'Final details check — you\'re almost ready!',emoji:'⏰',color:'#e74c3c'},
+        ];
+    }
+
+    function getTutorials(eventType) {
+        const all={
+            formal:[{name:'French Braid Elegance',emoji:'👸',dur:'12 min',level:'Intermediate'},{name:'Classic Smokey Eye',emoji:'👁️',dur:'15 min',level:'Advanced'},{name:'Perfect Ironing Technique',emoji:'👔',dur:'8 min',level:'Beginner'}],
+            business:[{name:'Natural Professional Makeup',emoji:'💼',dur:'10 min',level:'Beginner'},{name:'Executive Updo in 5 min',emoji:'💇',dur:'5 min',level:'Beginner'},{name:'Dressing by Industry',emoji:'📊',dur:'6 min',level:'Beginner'}],
+            party:[{name:'Glitter Eyes Step by Step',emoji:'✨',dur:'10 min',level:'Intermediate'},{name:'Beach Waves in 7 min',emoji:'🌊',dur:'7 min',level:'Beginner'},{name:'Night Look in 20 min',emoji:'🌙',dur:'20 min',level:'Beginner'}],
+            casual:[{name:'Effortless Natural Look',emoji:'🌸',dur:'5 min',level:'Beginner'},{name:'Effortless Chic Style',emoji:'😎',dur:'8 min',level:'Beginner'},{name:'Combining Neutral Tones',emoji:'🎨',dur:'4 min',level:'Beginner'}],
+        };
+        return all[eventType]||all.casual;
+    }
+
+    // ═══════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════
+    function showToast(msg) {
+        const t=document.getElementById('toastBar');
+        t.textContent=msg; t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+    }
+
+    // ═══════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════
+    function toggleBigText() {
+        bigTextOn=!bigTextOn;
+        document.getElementById('shell').style.fontSize=bigTextOn?'112%':'';
+        showToast(bigTextOn?'🔡 Large text ON':'🔡 Normal text');
+    }
+
+    // ═══════════════════════════════════════════
+    // CLOCK
+    // ═══════════════════════════════════════════
+    function updateClock() {
+        const now=new Date();
+        const h=String(now.getHours()).padStart(2,'0');
+        const m=String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('statusTime').textContent=h+':'+m;
+    }
+    setInterval(updateClock,10000); updateClock();
+
+    // ═══════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded',()=>{
+        renderTutorials();
+        renderCalendar();
+    });
+</script>
+</body>
+</html>
